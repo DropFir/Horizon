@@ -45,6 +45,7 @@ class AIProvider(str, Enum):
     GEMINI = "gemini"
     DOUBAO = "doubao"
     MINIMAX = "minimax"
+    DEEPSEEK = "deepseek"
 
 
 class AIConfig(BaseModel):
@@ -57,6 +58,8 @@ class AIConfig(BaseModel):
     temperature: float = 0.3
     max_tokens: int = 4096
     throttle_sec: float = 0.0
+    analysis_concurrency: int = 1
+    enrichment_concurrency: int = 1
     languages: List[str] = Field(default_factory=lambda: ["en"])
     # Azure OpenAI specific; required when provider == AZURE
     azure_endpoint_env: Optional[str] = None

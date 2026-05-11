@@ -5,6 +5,7 @@ For items that pass the score threshold, this module:
 2. Feeds search results + item content to AI to generate grounded background knowledge
 """
 
+import asyncio
 import json
 import re
 import sys
@@ -29,12 +30,29 @@ class ContentEnricher:
     def __init__(self, ai_client: AIClient):
         self.client = ai_client
 
+    def _get_concurrency(self) -> int:
+        """Return the configured enrichment concurrency, clamped to 1 or above."""
+        config = getattr(self.client, "config", None)
+        concurrency = getattr(config, "enrichment_concurrency", 1)
+        return max(concurrency, 1)
+
     async def enrich_batch(self, items: List[ContentItem]) -> None:
         """Enrich items in-place with background knowledge.
 
         Args:
             items: Content items to enrich (modified in-place)
         """
+        concurrency = self._get_concurrency()
+        semaphore = asyncio.Semaphore(concurrency)
+
+        async def _process(item: ContentItem, progress_task) -> None:
+            async with semaphore:
+                try:
+                    await self._enrich_item(item)
+                except Exception as e:
+                    print(f"Error enriching item {item.id}: {e}")
+            progress.advance(progress_task)
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -43,13 +61,10 @@ class ContentEnricher:
             transient=True,
         ) as progress:
             task = progress.add_task("Enriching", total=len(items))
-
-            for item in items:
-                try:
-                    await self._enrich_item(item)
-                except Exception as e:
-                    print(f"Error enriching item {item.id}: {e}")
-                progress.advance(task)
+            coros = [
+                _process(item, task) for item in items
+            ]
+            await asyncio.gather(*coros)
 
     async def _web_search(self, query: str, max_results: int = 3) -> list:
         """Search the web for context via DuckDuckGo.
@@ -63,7 +78,7 @@ class ContentEnricher:
             sys.stderr = open(os.devnull, "w")
             try:
                 ddgs = DDGS()
-                results = ddgs.text(query, max_results=max_results)
+                results = await asyncio.to_thread(ddgs.text, query, max_results=max_results)
             finally:
                 sys.stderr.close()
                 sys.stderr = stderr

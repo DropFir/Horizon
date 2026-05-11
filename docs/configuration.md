@@ -100,6 +100,26 @@ If your model has a strict per-minute request cap, you can slow the scorer down 
 - `4.5` is a reasonable starting point for free-tier models capped around 15 requests per minute.
 - Set it back to `0` if you have enough throughput headroom and want maximum speed.
 
+### AI Concurrency
+
+By default, AI scoring and enrichment run one item at a time. If your API endpoint supports concurrent requests, you can increase throughput:
+
+```json
+{
+  "ai": {
+    "analysis_concurrency": 4,
+    "enrichment_concurrency": 2
+  }
+}
+```
+
+- `analysis_concurrency`: Number of items scored in parallel. Default is `1`.
+- `enrichment_concurrency`: Number of high-scoring items enriched in parallel. Default is `1`.
+- Both values are clamped to a minimum of `1`.
+- Preserve the existing retry behavior per item.
+- Result ordering is preserved regardless of concurrency.
+- If you also use `throttle_sec`, each concurrent task sleeps independently after finishing an item.
+
 **Custom Base URL** (for proxies):
 
 ```json

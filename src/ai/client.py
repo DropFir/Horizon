@@ -101,10 +101,24 @@ class AnthropicClient(AIClient):
 
 
 class OpenAIClient(AIClient):
-    """Client for OpenAI models."""
+    """Client for OpenAI-compatible APIs."""
+
+    # Default base URLs per provider
+    _DEFAULT_BASE_URLS = {
+        "ali": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "deepseek": "https://api.deepseek.com",
+        "doubao": "https://ark.cn-beijing.volces.com/api/v3",
+        "minimax": "https://api.minimax.io/v1",
+    }
+
+    # Providers that don't support response_format
+    _NO_RESPONSE_FORMAT = {"minimax"}
+
+    # Providers that need temperature clamped to (0, 1]
+    _TEMP_CLAMP = {"minimax"}
 
     def __init__(self, config: AIConfig):
-        """Initialize OpenAI client.
+        """Initialize OpenAI-compatible client.
 
         Args:
             config: AI configuration
@@ -116,13 +130,15 @@ class OpenAIClient(AIClient):
             raise ValueError(f"Missing API key: {config.api_key_env}")
 
         kwargs = {"api_key": api_key}
-        if config.base_url:
-            kwargs["base_url"] = config.base_url
+        base_url = config.base_url or self._DEFAULT_BASE_URLS.get(config.provider.value)
+        if base_url:
+            kwargs["base_url"] = base_url
 
         self.client = AsyncOpenAI(**kwargs)
         self.model = config.model
         self.temperature = config.temperature
         self.max_tokens = config.max_tokens
+        self.provider = config.provider.value
 
     async def complete(
         self,
@@ -131,7 +147,7 @@ class OpenAIClient(AIClient):
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
     ) -> str:
-        """Generate completion using OpenAI.
+        """Generate completion using OpenAI-compatible API.
 
         Args:
             system: System prompt
@@ -145,20 +161,28 @@ class OpenAIClient(AIClient):
         temperature = self.temperature if temperature is None else temperature
         max_tokens = self.max_tokens if max_tokens is None else max_tokens
 
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=[
+        # Clamp temperature for providers that require it
+        if self.provider in self._TEMP_CLAMP and temperature <= 0:
+            temperature = 0.01
+
+        request_kwargs = {
+            "model": self.model,
+            "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user}
             ],
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format={"type": "json_object"}
-        )
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+
+        if self.provider not in self._NO_RESPONSE_FORMAT:
+            request_kwargs["response_format"] = {"type": "json_object"}
+
+        response = await self.client.chat.completions.create(**request_kwargs)
         usage = getattr(response, "usage", None)
         if usage is not None:
             record_usage(
-                "openai",
+                self.provider,
                 input_tokens=getattr(usage, "prompt_tokens", 0),
                 output_tokens=getattr(usage, "completion_tokens", 0),
             )
@@ -297,136 +321,6 @@ class AzureOpenAIClient(AIClient):
         return None
 
 
-class MiniMaxClient(AIClient):
-    """Client for MiniMax models via OpenAI-compatible API."""
-
-    def __init__(self, config: AIConfig):
-        """Initialize MiniMax client.
-
-        Args:
-            config: AI configuration
-        """
-        self.config = config
-
-        api_key = os.getenv(config.api_key_env)
-        if not api_key:
-            raise ValueError(f"Missing API key: {config.api_key_env}")
-
-        kwargs = {
-            "api_key": api_key,
-            "base_url": config.base_url or "https://api.minimax.io/v1",
-        }
-
-        self.client = AsyncOpenAI(**kwargs)
-        self.model = config.model
-        self.temperature = config.temperature
-        self.max_tokens = config.max_tokens
-
-    async def complete(
-        self,
-        system: str,
-        user: str,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> str:
-        """Generate completion using MiniMax.
-
-        MiniMax requires temperature in (0.0, 1.0] and does not support
-        response_format, so we rely on prompt engineering for JSON output.
-
-        Args:
-            system: System prompt
-            user: User prompt
-            temperature: Sampling temperature
-            max_tokens: Maximum tokens to generate
-
-        Returns:
-            str: Generated text
-        """
-        temperature = self.temperature if temperature is None else temperature
-        max_tokens = self.max_tokens if max_tokens is None else max_tokens
-
-        # MiniMax temperature must be in (0.0, 1.0]; clamp 0 to a small value
-        if temperature <= 0:
-            temperature = 0.01
-
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user}
-            ],
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        usage = getattr(response, "usage", None)
-        if usage is not None:
-            record_usage(
-                "minimax",
-                input_tokens=getattr(usage, "prompt_tokens", 0),
-                output_tokens=getattr(usage, "completion_tokens", 0),
-            )
-        return response.choices[0].message.content
-
-
-class AliClient(AIClient):
-    """Client for Alibaba DashScope (OpenAI-compatible API)."""
-
-    def __init__(self, config: AIConfig):
-        """Initialize DashScope client.
-
-        Args:
-            config: AI configuration
-        """
-        self.config = config
-
-        api_key = os.getenv(config.api_key_env)
-        if not api_key:
-            raise ValueError(f"Missing API key: {config.api_key_env}")
-
-        kwargs = {
-            "api_key": api_key,
-            "base_url": config.base_url or "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        }
-        self.client = AsyncOpenAI(**kwargs)
-        self.model = config.model
-        self.temperature = config.temperature
-        self.max_tokens = config.max_tokens
-
-    async def complete(
-        self,
-        system: str,
-        user: str,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> str:
-        """Generate completion using DashScope.
-
-        Args:
-            system: System prompt
-            user: User prompt
-            temperature: Sampling temperature
-            max_tokens: Maximum tokens to generate
-
-        Returns:
-            str: Generated text
-        """
-        temperature = self.temperature if temperature is None else temperature
-        max_tokens = self.max_tokens if max_tokens is None else max_tokens
-
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user}
-            ],
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format={"type": "json_object"}
-        )
-        return response.choices[0].message.content
-
-
 class GeminiClient(AIClient):
     """Client for Google Gemini models."""
 
@@ -501,17 +395,17 @@ def create_ai_client(config: AIConfig) -> AIClient:
     """
     if config.provider == AIProvider.ANTHROPIC:
         return AnthropicClient(config)
-    elif config.provider == AIProvider.OPENAI:
-        return OpenAIClient(config)
     elif config.provider == AIProvider.AZURE:
         return AzureOpenAIClient(config)
-    elif config.provider == AIProvider.ALI:
-        return AliClient(config)
     elif config.provider == AIProvider.GEMINI:
         return GeminiClient(config)
-    elif config.provider == AIProvider.DOUBAO:
+    elif config.provider in {
+        AIProvider.OPENAI,
+        AIProvider.ALI,
+        AIProvider.DOUBAO,
+        AIProvider.MINIMAX,
+        AIProvider.DEEPSEEK,
+    }:
         return OpenAIClient(config)
-    elif config.provider == AIProvider.MINIMAX:
-        return MiniMaxClient(config)
     else:
         raise ValueError(f"Unsupported AI provider: {config.provider}")

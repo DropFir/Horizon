@@ -6,19 +6,13 @@
     "api_key_env": "DEEPSEEK_API_KEY",
     "base_url": "https://api.deepseek.com",
     "temperature": 0.3,
-    "max_tokens": 4096,
-    "throttle_sec": 0
-  },
-  "email": {
-    "enabled": false,
-    "smtp_server": "smtp.qq.com",
-    "smtp_port": 465,
-    "imap_server": "imap.qq.com",
-    "imap_port": 993,
-    "email_address": "xxx@qq.com",
-    "sender_name": "Horizon Daily",
-    "subscribe_keyword": "SUBSCRIBE",
-    "unsubscribe_keyword": "UNSUBSCRIBE"
+    "max_tokens": 8192,
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "analysis_concurrency": 5,
+    "enrichment_concurrency": 5
   },
   "sources": {
     "github": [
@@ -72,17 +66,7 @@
           "sort": "new",
           "fetch_limit": 10
         }
-      ],
-      "fetch_comments": 5
-    },
-    "twitter": {
-      "enabled": false,
-      "users": ["karpathy", "ylecun"],
-      "fetch_limit": 10,
-      "fetch_reply_text": false,
-      "max_replies_per_tweet": 3,
-      "max_tweets_to_expand": 10,
-      "reply_min_likes": 5
+      ]
     }
   },
   "filtering": {
