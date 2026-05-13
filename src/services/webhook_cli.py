@@ -13,7 +13,7 @@ from rich.panel import Panel
 
 from ..ai.summarizer import DailySummarizer
 from ..models import ContentItem, SourceType
-from ..storage.manager import StorageManager
+from ..storage.manager import ConfigError, StorageManager
 from .webhook import WebhookNotifier
 
 console = Console()
@@ -171,6 +171,9 @@ def main() -> None:
         except FileNotFoundError:
             console.print("[bold red]Configuration file not found![/bold red]")
             console.print("Run [bold cyan]uv run horizon-wizard[/bold cyan] to set up your configuration.")
+            sys.exit(1)
+        except ConfigError as e:
+            console.print(f"[bold red]Error loading configuration: {e}[/bold red]")
             sys.exit(1)
 
         if not config.webhook or not config.webhook.enabled:

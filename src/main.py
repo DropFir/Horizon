@@ -8,7 +8,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from rich.console import Console
 
-from .storage.manager import StorageManager
+from .storage.manager import ConfigError, StorageManager
 from .orchestrator import HorizonOrchestrator
 
 
@@ -59,6 +59,9 @@ def main():
                 "or create [cyan]data/config.json[/cyan] manually based on the template:\n"
             )
             print_config_template()
+            sys.exit(1)
+        except ConfigError as e:
+            console.print(f"[bold red]❌ Error loading configuration: {e}[/bold red]")
             sys.exit(1)
         except Exception as e:
             console.print(f"[bold red]❌ Error loading configuration: {e}[/bold red]")

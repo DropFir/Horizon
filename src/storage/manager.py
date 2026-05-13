@@ -4,7 +4,15 @@ import json
 import shutil
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from ..models import Config
+
+
+class ConfigError(ValueError):
+    """Raised when configuration is missing or invalid."""
+
+    pass
 
 
 class StorageManager:
@@ -25,10 +33,21 @@ class StorageManager:
                 f"Please create it based on the template in README.md"
             )
 
-        with open(self.config_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        try:
+            with open(self.config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ConfigError(
+                f"Invalid JSON in configuration file: {self.config_path}\n" f"Error: {e}"
+            ) from e
 
-        return Config.model_validate(data)
+        try:
+            return Config.model_validate(data)
+        except ValidationError as e:
+            raise ConfigError(
+                f"Configuration validation failed for {self.config_path}\n"
+                f"Details: {e}"
+            ) from e
 
     def save_config(self, config: Config, backup: bool = True) -> Path:
         """Save configuration to config.json, optionally backing up the existing file.
