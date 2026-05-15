@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-    "ai": {
+  "ai": {
     "provider": "openai",
     "model": "deepseek-v4-flash",
     "api_key_env": "DEEPSEEK_API_KEY",
@@ -26,11 +26,17 @@
         "owner": "astral-sh",
         "repo": "uv",
         "enabled": true
+      },
+      {
+        "type": "repo_releases",
+        "owner": "microsoft",
+        "repo": "vscode",
+        "enabled": true
       }
     ],
     "hackernews": {
       "enabled": true,
-      "fetch_top_stories": 20,
+      "fetch_top_stories": 30,
       "min_score": 100
     },
     "rss": [
@@ -41,6 +47,36 @@
         "category": "ai-tools"
       },
       {
+        "name": "Lobsters",
+        "url": "https://lobste.rs/rss",
+        "enabled": true,
+        "category": "community"
+      },
+      {
+        "name": "GitHub Blog",
+        "url": "https://github.blog/feed/",
+        "enabled": true,
+        "category": "industry"
+      },
+      {
+        "name": "Rust Blog",
+        "url": "https://blog.rust-lang.org/feed.xml",
+        "enabled": true,
+        "category": "lang"
+      },
+      {
+        "name": "Go Blog",
+        "url": "https://go.dev/blog/feed.atom",
+        "enabled": true,
+        "category": "lang"
+      },
+      {
+        "name": "Dan Luu",
+        "url": "https://danluu.com/atom.xml",
+        "enabled": true,
+        "category": "systems"
+      },
+      {
         "name": "LWN.net (subscriber full-text)",
         "url": "https://lwn.net/headlines/full_text?key=${LWN_KEY}",
         "enabled": false,
@@ -49,14 +85,47 @@
     ],
     "reddit": {
       "enabled": true,
+      "fetch_comments": 3,
       "subreddits": [
         {
           "subreddit": "MachineLearning",
           "enabled": true,
-          "sort": "hot",
+          "sort": "top",
           "time_filter": "day",
           "fetch_limit": 15,
           "min_score": 50
+        },
+        {
+          "subreddit": "programming",
+          "enabled": true,
+          "sort": "top",
+          "time_filter": "day",
+          "fetch_limit": 15,
+          "min_score": 80
+        },
+        {
+          "subreddit": "golang",
+          "enabled": true,
+          "sort": "top",
+          "time_filter": "day",
+          "fetch_limit": 12,
+          "min_score": 35
+        },
+        {
+          "subreddit": "kubernetes",
+          "enabled": true,
+          "sort": "top",
+          "time_filter": "day",
+          "fetch_limit": 12,
+          "min_score": 35
+        },
+        {
+          "subreddit": "LocalLLaMA",
+          "enabled": true,
+          "sort": "top",
+          "time_filter": "day",
+          "fetch_limit": 12,
+          "min_score": 40
         }
       ],
       "users": [
@@ -65,6 +134,49 @@
           "enabled": true,
           "sort": "new",
           "fetch_limit": 10
+        }
+      ]
+    },
+    "telegram": {
+      "enabled": true,
+      "channels": [
+        {
+          "channel": "YOUR_TELEGRAM_PUBLIC_CHANNEL",
+          "enabled": true,
+          "fetch_limit": 20
+        }
+      ]
+    },
+    "twitter": {
+      "enabled": true,
+      "apify_token_env": "APIFY_TOKEN",
+      "actor_id": "altimis~scweet",
+      "users": [],
+      "fetch_limit": 10,
+      "fetch_reply_text": false,
+      "max_replies_per_tweet": 3,
+      "max_tweets_to_expand": 5,
+      "reply_min_likes": 5
+    },
+    "openbb": {
+      "enabled": true,
+      "fetch_filings": false,
+      "filings_provider": "sec",
+      "watchlists": [
+        {
+          "name": "megacaps",
+          "enabled": true,
+          "provider": "yfinance",
+          "fetch_limit": 15,
+          "category": "equities",
+          "symbols": [
+            "AAPL",
+            "MSFT",
+            "NVDA",
+            "GOOGL",
+            "AMZN",
+            "META"
+          ]
         }
       ]
     }
