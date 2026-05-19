@@ -50,6 +50,7 @@ class AIProvider(str, Enum):
     DOUBAO = "doubao"
     MINIMAX = "minimax"
     DEEPSEEK = "deepseek"
+    OLLAMA = "ollama"
 
 
 class AIConfig(BaseModel):
@@ -275,7 +276,9 @@ class WebhookConfig(BaseModel):
     def validate_fallback_layout(cls, v: str) -> str:
         allowed = {"markdown", "collapsible"}
         if v not in allowed:
-            raise ValueError(f"webhook.fallback_layout must be one of {allowed}, got '{v}'")
+            raise ValueError(
+                f"webhook.fallback_layout must be one of {allowed}, got '{v}'"
+            )
         return v
 
     @field_validator("overview_position")
@@ -283,7 +286,9 @@ class WebhookConfig(BaseModel):
     def validate_overview_position(cls, v: str) -> str:
         allowed = {"first", "last"}
         if v not in allowed:
-            raise ValueError(f"webhook.overview_position must be one of {allowed}, got '{v}'")
+            raise ValueError(
+                f"webhook.overview_position must be one of {allowed}, got '{v}'"
+            )
         return v
 
 
