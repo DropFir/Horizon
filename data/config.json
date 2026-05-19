@@ -77,6 +77,30 @@
         "category": "systems"
       },
       {
+        "name": "OpenAI News",
+        "url": "https://openai.com/news/rss.xml",
+        "enabled": true,
+        "category": "industry"
+      },
+      {
+        "name": "阮一峰的网络日志",
+        "url": "https://www.ruanyifeng.com/blog/atom.xml",
+        "enabled": true,
+        "category": "blog"
+      },
+      {
+        "name": "HNRSS Show HN",
+        "url": "https://hnrss.org/show",
+        "enabled": true,
+        "category": "community"
+      },
+      {
+        "name": "HNRSS Best",
+        "url": "https://hnrss.org/best",
+        "enabled": true,
+        "category": "community"
+      },
+      {
         "name": "LWN.net (subscriber full-text)",
         "url": "https://lwn.net/headlines/full_text?key=${LWN_KEY}",
         "enabled": false,
