@@ -287,40 +287,13 @@ class WebhookNotifier:
         else:
             self.console = console
         self.url = None
+        self.topics_url = None
         self._validate_config()  # sets self.url or raises ValueError
+        self._validate_topics_url()
 
     def _validate_url(self, url: str) -> str:
-        """Validate webhook URL has a valid scheme (http/https) and hostname.
-        Raises:
-            ValueError: If the URL is empty, has wrong scheme, no hostname,
-                        or is structurally invalid
-        """
-        url = url.strip()
-        # Remove shell escape artifacts: \? \= \& \% before query chars
-        url = re.sub(r"\\([?=&%])", r"\1", url)
-        if not url:
-            raise ValueError(
-                f"Webhook URL is empty (env var '{self.config.url_env}' is set but empty)"
-            )
-        parsed = urlparse(url)
-        if parsed.scheme not in ("http", "https"):
-            raise ValueError(
-                f"Webhook URL must use http or https scheme, got '{parsed.scheme or 'none'}' "
-                f"(env var '{self.config.url_env}')"
-            )
-        if not parsed.hostname:
-            raise ValueError(
-                f"Webhook URL has no hostname: '{url}' "
-                f"(env var '{self.config.url_env}')"
-            )
-        try:
-            httpx.URL(url)
-        except httpx.InvalidURL as e:
-            raise ValueError(
-                f"Webhook URL is structurally invalid: '{url}' — {e} "
-                f"(env var '{self.config.url_env}')"
-            ) from e
-        return url
+        """Validate webhook URL has a valid scheme (http/https) and hostname."""
+        return self._validate_url_for_env(url, self.config.url_env or "WEBHOOK_URL")
 
     def _validate_config(self) -> None:
         """Validate webhook URL configuration and print warnings for skip scenarios.
@@ -352,6 +325,55 @@ class WebhookNotifier:
 
         # env var exists — validate the URL value (strip + scheme + hostname + httpx check)
         self.url = self._validate_url(raw_url)
+
+    def _validate_topics_url(self) -> None:
+        """Validate optional topics import URL from topics_url_env."""
+        topics_url_env = getattr(self.config, "topics_url_env", None)
+        if not topics_url_env:
+            return
+
+        raw_url = os.getenv(topics_url_env)
+        if raw_url is None:
+            logger.warning(
+                "Webhook topics_url_env '%s' is configured but env var is not set.",
+                topics_url_env,
+            )
+            self.console.print(
+                f"[yellow]topics_url_env '{topics_url_env}' is set in config but the env var "
+                f"is not defined. Structured topic import will be skipped.[/yellow]"
+            )
+            return
+
+        try:
+            self.topics_url = self._validate_url_for_env(raw_url, topics_url_env)
+        except ValueError as e:
+            logger.warning("Invalid topics import URL: %s", e)
+            self.console.print(f"[yellow]{e}[/yellow]")
+
+    def _validate_url_for_env(self, url: str, env_name: str) -> str:
+        url = url.strip()
+        url = re.sub(r"\\([?=&%])", r"\1", url)
+        if not url:
+            raise ValueError(
+                f"URL is empty (env var '{env_name}' is set but empty)"
+            )
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError(
+                f"URL must use http or https scheme, got '{parsed.scheme or 'none'}' "
+                f"(env var '{env_name}')"
+            )
+        if not parsed.hostname:
+            raise ValueError(
+                f"URL has no hostname: '{url}' (env var '{env_name}')"
+            )
+        try:
+            httpx.URL(url)
+        except httpx.InvalidURL as e:
+            raise ValueError(
+                f"URL is structurally invalid: '{url}' — {e} (env var '{env_name}')"
+            ) from e
+        return url
 
     def _render_request_components(
         self, variables: dict
@@ -799,17 +821,57 @@ class WebhookNotifier:
         for message in messages:
             await self.notify(message)
 
+    async def send_topics_import(
+        self,
+        important_items: List[ContentItem],
+        date: str,
+        lang: str,
+    ) -> None:
+        """POST structured topic batch to the blog backend import API."""
+        if not self.topics_url:
+            return
+
+        webhook_languages = getattr(self.config, "languages", None)
+        if webhook_languages and lang not in webhook_languages:
+            return
+
+        topics = [_serialize_topic_item(item, lang) for item in important_items]
+        payload = {
+            "reportDate": date,
+            "language": lang,
+            "topics": topics,
+        }
+
+        self.console.print(
+            f"📥 Sending {lang.upper()} topics import ({len(topics)} items)..."
+        )
+
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    self.topics_url,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                )
+            safe_url = redact_url(self.topics_url)
+            self._handle_response_status(response, safe_url)
+        except httpx.InvalidURL as e:
+            self.console.print(f"[red]Topics import URL is invalid: {e}[/red]")
+        except httpx.ConnectError as e:
+            self.console.print(f"[red]Topics import connection failed: {e}[/red]")
+        except httpx.TimeoutException as e:
+            self.console.print(f"[red]Topics import request timed out: {e}[/red]")
+        except Exception as e:
+            self.console.print(
+                f"[red]Topics import failed unexpectedly: {type(e).__name__}: {e}[/red]"
+            )
+
     async def send_failure(
         self,
         date: str,
         error_message: str,
     ) -> None:
-        """Send webhook notification when the pipeline fails.
-
-        Args:
-            date: Date string (YYYY-MM-DD)
-            error_message: Description of the failure
-        """
+        """Send webhook notification when the pipeline fails."""
         self.console.print("🔔 Sending webhook failure notification...")
         await self.notify(
             {
@@ -824,3 +886,61 @@ class WebhookNotifier:
                 "summary": f"generation failed: {error_message}",
             }
         )
+
+
+def _serialize_topic_item(item: ContentItem, lang: str) -> dict[str, Any]:
+    """Map a ContentItem to the blog backend HorizonTopicImport schema."""
+    meta = item.metadata or {}
+    title = str(meta.get(f"title_{lang}") or item.title)
+    summary = (
+        meta.get(f"detailed_summary_{lang}")
+        or meta.get("detailed_summary")
+        or item.ai_summary
+        or ""
+    )
+    background = meta.get(f"background_{lang}") or meta.get("background") or ""
+    discussion = (
+        meta.get(f"community_discussion_{lang}")
+        or meta.get("community_discussion")
+        or ""
+    )
+
+    source_type = item.source_type.value
+    source_parts = [source_type]
+    if meta.get("subreddit"):
+        source_parts.append(f"r/{meta['subreddit']}")
+    if meta.get("feed_name"):
+        source_parts.append(str(meta["feed_name"]))
+    elif item.author:
+        source_parts.append(str(item.author))
+    if item.published_at:
+        day = item.published_at.strftime("%d").lstrip("0")
+        source_parts.append(item.published_at.strftime(f"%b {day}, %H:%M"))
+    source_line = " \u00b7 ".join(source_parts)
+
+    discussion_url = meta.get("discussion_url")
+    if discussion_url and str(discussion_url) != str(item.url):
+        label = "社区讨论" if lang == "zh" else "Discussion"
+        source_line += f" \u00b7 [{label}]({discussion_url})"
+
+    reference_links = []
+    for source in meta.get("sources") or []:
+        url = source.get("url")
+        if not url:
+            continue
+        reference_links.append(
+            {"title": source.get("title") or url, "url": url}
+        )
+
+    return {
+        "horizonItemId": item.id,
+        "title": title,
+        "url": str(item.url),
+        "score": float(item.ai_score or 0),
+        "summary": summary,
+        "background": background or None,
+        "discussion": discussion or None,
+        "tags": list(item.ai_tags or []),
+        "sourceLine": source_line,
+        "referenceLinks": reference_links,
+    }

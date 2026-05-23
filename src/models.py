@@ -245,6 +245,9 @@ class WebhookConfig(BaseModel):
     languages: Optional[List[str]] = (
         None  # Optional language filter for webhook delivery; defaults to all AI languages
     )
+    topics_url_env: Optional[str] = (
+        None  # Environment variable for structured topics JSON import API
+    )
     enabled: bool = False
 
     @field_validator("delivery")

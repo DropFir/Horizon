@@ -188,6 +188,11 @@ class HorizonOrchestrator:
                         lang=lang,
                         summarizer=summarizer,
                     )
+                    await self.webhook_notifier.send_topics_import(
+                        important_items=important_items,
+                        date=today,
+                        lang=lang,
+                    )
 
             self.console.print("[bold green]✅ Horizon completed successfully![/bold green]")
             usage = get_usage_snapshot()
