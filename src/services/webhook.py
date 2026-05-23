@@ -302,7 +302,8 @@ class WebhookNotifier:
         Sets self.url to the validated URL, or leaves it None for skip scenarios.
         """
         if not self.config.url_env:
-            # url_env not configured at all
+            if getattr(self.config, "topics_url_env", None):
+                return
             logger.warning("Webhook enabled but url_env is not configured, skipping notification.")
             self.console.print(
                 "[yellow]Webhook enabled but 'url_env' is not set in config. "

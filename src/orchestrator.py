@@ -178,16 +178,8 @@ class HorizonOrchestrator:
                     subject = f"Horizon Summary ({lang.upper()}) - {today}"
                     self.email_manager.send_daily_summary(summary, subject, subscribers)
 
-                # Send webhook notification if configured
+                # Push structured topics to blog backend (no full-daily article webhook)
                 if self.webhook_notifier:
-                    await self.webhook_notifier.send_daily_summary(
-                        summary=summary,
-                        important_items=important_items,
-                        all_items_count=len(all_items),
-                        date=today,
-                        lang=lang,
-                        summarizer=summarizer,
-                    )
                     await self.webhook_notifier.send_topics_import(
                         important_items=important_items,
                         date=today,

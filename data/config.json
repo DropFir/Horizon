@@ -211,20 +211,7 @@
   },
   "webhook": {
     "enabled": true,
-    "url_env": "HORIZON_WEBHOOK_URL",
     "topics_url_env": "HORIZON_TOPICS_URL",
-    "delivery": "summary",
-    "overview_position": "first",
-    "platform": "generic",
-    "layout": "markdown",
-    "fallback_layout": "markdown",
-    "languages": ["zh"],
-    "request_body": {
-      "title": "#{message_title}",
-      "content": "#{summary}",
-      "author": "全栈章鱼哥",
-      "summary": "#{date} Horizon日报，精选#{important_items}条重要资讯"
-    },
-    "headers": ""
+    "languages": ["zh"]
   }
 }
