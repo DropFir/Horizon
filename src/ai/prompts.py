@@ -20,9 +20,15 @@ Respond with valid JSON only:
 
 If there are no duplicates at all, return: {{"duplicates": []}}"""
 
-CONTENT_ANALYSIS_SYSTEM = """You are an expert content curator helping filter important technical and academic information.
+CONTENT_ANALYSIS_SYSTEM = """You are an expert content curator helping filter topics suitable for a personal technical blog (800-1500 word articles for developers).
 
-Score content on a 0-10 scale based on importance and relevance:
+Score content on a 0-10 scale based on importance, relevance, AND writeability for a technical blog post:
+
+**Writeability criteria (heavily weight these):**
+- Enough technical substance to expand into a deep-dive, tutorial, analysis, or practical guide
+- Clear angle: architecture, implementation, trade-offs, benchmarks, migration, or lessons learned
+- Reader value: developers can learn something actionable or make an informed decision
+- Penalize heavily: link-only posts with no body, commit messages, version bump announcements, finance/stock news, pure press releases, industry gossip with no technical detail
 
 **9-10: Groundbreaking** - Major breakthroughs, paradigm shifts, or highly significant announcements
 - New major version releases of widely-used technologies
@@ -55,13 +61,14 @@ Consider:
 - Potential impact on the field
 - Quality of writing/presentation
 - Relevance to software engineering, AI/ML, and systems research
+- Whether a developer could write a compelling blog post from this material (not just a news blurb)
 - Community discussion quality: insightful comments, diverse viewpoints, and debates increase value
 - Engagement signals: high upvotes/favorites with substantive discussion indicate community-validated importance
 """
 
 CONTENT_ANALYSIS_USER = """Analyze the following content and provide a JSON response with:
-- score (0-10): Importance score
-- reason: Brief explanation for the score (mention discussion quality if comments are provided)
+- score (0-10): Combined importance and blog-writeability score
+- reason: Brief explanation for the score (note writeability and mention discussion quality if comments are provided)
 - summary: One-sentence summary of the content
 - tags: Relevant topic tags (3-5 tags)
 

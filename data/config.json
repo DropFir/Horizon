@@ -17,11 +17,6 @@
   "sources": {
     "github": [
       {
-        "type": "user_events",
-        "username": "torvalds",
-        "enabled": true
-      },
-      {
         "type": "repo_releases",
         "owner": "astral-sh",
         "repo": "uv",
@@ -45,12 +40,6 @@
         "url": "https://simonwillison.net/atom/everything/",
         "enabled": true,
         "category": "ai-tools"
-      },
-      {
-        "name": "Lobsters",
-        "url": "https://lobste.rs/rss",
-        "enabled": true,
-        "category": "community"
       },
       {
         "name": "GitHub Blog",
@@ -89,21 +78,9 @@
         "category": "blog"
       },
       {
-        "name": "HNRSS Show HN",
-        "url": "https://hnrss.org/show",
-        "enabled": true,
-        "category": "community"
-      },
-      {
-        "name": "HNRSS Best",
-        "url": "https://hnrss.org/best",
-        "enabled": true,
-        "category": "community"
-      },
-      {
         "name": "LWN.net (subscriber full-text)",
         "url": "https://lwn.net/headlines/full_text?key=${LWN_KEY}",
-        "enabled": false,
+        "enabled": true,
         "category": "linux"
       }
     ],
@@ -112,36 +89,12 @@
       "fetch_comments": 3,
       "subreddits": [
         {
-          "subreddit": "MachineLearning",
-          "enabled": true,
-          "sort": "top",
-          "time_filter": "day",
-          "fetch_limit": 15,
-          "min_score": 50
-        },
-        {
           "subreddit": "programming",
           "enabled": true,
           "sort": "top",
           "time_filter": "day",
           "fetch_limit": 15,
           "min_score": 80
-        },
-        {
-          "subreddit": "golang",
-          "enabled": true,
-          "sort": "top",
-          "time_filter": "day",
-          "fetch_limit": 12,
-          "min_score": 35
-        },
-        {
-          "subreddit": "kubernetes",
-          "enabled": true,
-          "sort": "top",
-          "time_filter": "day",
-          "fetch_limit": 12,
-          "min_score": 35
         },
         {
           "subreddit": "LocalLLaMA",
@@ -152,27 +105,14 @@
           "min_score": 40
         }
       ],
-      "users": [
-        {
-          "username": "iamthatis",
-          "enabled": true,
-          "sort": "new",
-          "fetch_limit": 10
-        }
-      ]
+      "users": []
     },
     "telegram": {
-      "enabled": true,
-      "channels": [
-        {
-          "channel": "YOUR_TELEGRAM_PUBLIC_CHANNEL",
-          "enabled": true,
-          "fetch_limit": 20
-        }
-      ]
+      "enabled": false,
+      "channels": []
     },
     "twitter": {
-      "enabled": true,
+      "enabled": false,
       "apify_token_env": "APIFY_TOKEN",
       "actor_id": "altimis~scweet",
       "users": [],
@@ -183,7 +123,7 @@
       "reply_min_likes": 5
     },
     "openbb": {
-      "enabled": true,
+      "enabled": false,
       "fetch_filings": false,
       "filings_provider": "sec",
       "watchlists": [
@@ -206,7 +146,7 @@
     }
   },
   "filtering": {
-    "ai_score_threshold": 6.0,
+    "ai_score_threshold": 7.5,
     "time_window_hours": 24
   },
   "webhook": {
