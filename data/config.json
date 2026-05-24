@@ -171,8 +171,22 @@
     }
   },
   "filtering": {
-    "ai_score_threshold": 7.0,
-    "time_window_hours": 24
+    "ai_score_threshold": 6.0,
+    "time_window_hours": 24,
+    "blog_focus": [
+      "AI/ML 与大模型应用",
+      "Java 与后端开发",
+      "前端与 Web 开发",
+      "云原生、DevOps 与 Kubernetes",
+      "现代软件工程实践"
+    ],
+    "exclude_topics": [
+      "芯片/CPU 微码逆向与硬件考古",
+      "复古计算与历史硬件电路分析",
+      "航天史或博物馆级硬件收藏",
+      "纯硬件/PCB 逆向工程",
+      "与日常开发无关的 CPU 架构考古"
+    ]
   },
   "webhook": {
     "enabled": true,

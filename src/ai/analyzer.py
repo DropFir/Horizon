@@ -8,9 +8,9 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, MofNCompleteColumn
 
 from .client import AIClient
-from .prompts import CONTENT_ANALYSIS_SYSTEM, CONTENT_ANALYSIS_USER
+from .prompts import CONTENT_ANALYSIS_SYSTEM, CONTENT_ANALYSIS_USER, build_content_analysis_system
 from .utils import parse_json_response
-from ..models import ContentItem
+from ..models import ContentItem, FilteringConfig
 
 DEFAULT_THROTTLE_SEC = 0.0
 
@@ -18,8 +18,21 @@ DEFAULT_THROTTLE_SEC = 0.0
 class ContentAnalyzer:
     """Analyzes content items using AI to determine importance."""
 
-    def __init__(self, ai_client: AIClient):
+    def __init__(
+        self,
+        ai_client: AIClient,
+        filtering: FilteringConfig | None = None,
+    ):
         self.client = ai_client
+        self.filtering = filtering
+
+    def _analysis_system_prompt(self) -> str:
+        if not self.filtering:
+            return CONTENT_ANALYSIS_SYSTEM
+        return build_content_analysis_system(
+            blog_focus=self.filtering.blog_focus,
+            exclude_topics=self.filtering.exclude_topics,
+        )
 
     @staticmethod
     def _parse_json_response(response: str) -> Optional[dict]:
@@ -141,7 +154,7 @@ class ContentAnalyzer:
 
         # Get AI completion
         response = await self.client.complete(
-            system=CONTENT_ANALYSIS_SYSTEM,
+            system=self._analysis_system_prompt(),
             user=user_prompt,
         )
 

@@ -318,6 +318,8 @@ class FilteringConfig(BaseModel):
 
     ai_score_threshold: float = 7.0
     time_window_hours: int = 24
+    blog_focus: List[str] = Field(default_factory=list)
+    exclude_topics: List[str] = Field(default_factory=list)
 
 
 class Config(BaseModel):

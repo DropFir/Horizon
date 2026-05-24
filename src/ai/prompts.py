@@ -64,7 +64,32 @@ Consider:
 - Whether a developer could write a compelling blog post from this material (not just a news blurb)
 - Community discussion quality: insightful comments, diverse viewpoints, and debates increase value
 - Engagement signals: high upvotes/favorites with substantive discussion indicate community-validated importance
+- If content matches the author's exclude_topics, score it 4 or below even when technically impressive
+- If content is outside blog_focus and exclude_topics, score based on writeability but cap at 6 unless clearly useful for modern application developers
 """
+
+
+def build_content_analysis_system(
+    blog_focus: list[str] | None = None,
+    exclude_topics: list[str] | None = None,
+) -> str:
+    """Build the analysis system prompt with optional focus/exclusion lists."""
+    prompt = CONTENT_ANALYSIS_SYSTEM
+    focus = [item.strip() for item in (blog_focus or []) if item.strip()]
+    exclude = [item.strip() for item in (exclude_topics or []) if item.strip()]
+
+    if focus:
+        focus_lines = "\n".join(f"- {item}" for item in focus)
+        prompt += f"\n**Author's blog focus (prioritize and score higher):**\n{focus_lines}\n"
+
+    if exclude:
+        exclude_lines = "\n".join(f"- {item}" for item in exclude)
+        prompt += (
+            "\n**Author does NOT write about these (score ≤4, even if popular on HN):**\n"
+            f"{exclude_lines}\n"
+        )
+
+    return prompt
 
 CONTENT_ANALYSIS_USER = """Analyze the following content and provide a JSON response with:
 - score (0-10): Combined importance and blog-writeability score
