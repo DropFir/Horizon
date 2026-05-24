@@ -116,7 +116,7 @@
       "apify_token_env": "APIFY_TOKEN",
       "actor_id": "altimis~scweet",
       "users": ["pankajkumar_dev"],
-      "fetch_limit": 10,
+      "fetch_limit": 20,
       "time_window_hours": 48,
       "fetch_reply_text": false,
       "max_replies_per_tweet": 3,

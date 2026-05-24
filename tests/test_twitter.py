@@ -1,6 +1,7 @@
 """Tests for TwitterScraper."""
 
 import asyncio
+import json
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -111,6 +112,32 @@ def test_missing_token_returns_empty(monkeypatch):
     )
     asyncio.run(client.aclose())
     assert result == []
+
+
+def test_start_run_uses_fetch_limit_not_hardcoded_minimum(monkeypatch):
+    monkeypatch.setenv("APIFY_TOKEN", "test_token")
+    seen_max_items = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "/runs" in request.url.path and request.method == "POST":
+            seen_max_items.append(json.loads(request.content)["max_items"])
+            return httpx.Response(200, json=_run_resp())
+        if "/actor-runs/" in request.url.path:
+            return httpx.Response(200, json=_status_resp())
+        if "/datasets/" in request.url.path:
+            return httpx.Response(200, json=[])
+        raise AssertionError(f"Unexpected: {request.url}")
+
+    transport = httpx.MockTransport(handler)
+    client = httpx.AsyncClient(transport=transport)
+    asyncio.run(
+        TwitterScraper(_make_config(fetch_limit=12), client).fetch(
+            datetime.now(timezone.utc) - timedelta(hours=1)
+        )
+    )
+    asyncio.run(client.aclose())
+
+    assert seen_max_items == [12]
 
 
 def test_successful_fetch_returns_items(monkeypatch):
