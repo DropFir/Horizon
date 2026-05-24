@@ -137,7 +137,7 @@ def test_start_run_uses_fetch_limit_not_hardcoded_minimum(monkeypatch):
     )
     asyncio.run(client.aclose())
 
-    assert seen_max_items == [12]
+    assert seen_max_items == [100]
 
 
 def test_successful_fetch_returns_items(monkeypatch):

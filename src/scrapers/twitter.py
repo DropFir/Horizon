@@ -62,6 +62,11 @@ class TwitterScraper(BaseScraper):
             if parsed:
                 items.append(parsed)
 
+        items.sort(key=lambda x: x.published_at, reverse=True)
+        limit = max(1, self.config.fetch_limit)
+        if len(items) > limit:
+            items = items[:limit]
+
         logger.info(f"Fetched {len(items)} tweets via Apify.")
         return items
 
@@ -72,7 +77,7 @@ class TwitterScraper(BaseScraper):
             "source_mode": "profiles",
             "profile_urls": users,
             "search_sort": "Latest",
-            "max_items": max(1, self.config.fetch_limit),
+            "max_items": max(100, self.config.fetch_limit),
         }
         url = f"{_APIFY_BASE}/acts/{self.config.actor_id}/runs?token={token}"
         try:
@@ -134,7 +139,7 @@ class TwitterScraper(BaseScraper):
         if max_replies == 0:
             return []
 
-        max_items = max(max_replies * 5, 10)
+        max_items = max(100, max_replies * 5)
         payload = {
             "source_mode": "search",
             "search_query": f"conversation_id:{conversation_id}",
