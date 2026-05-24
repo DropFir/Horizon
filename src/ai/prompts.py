@@ -30,7 +30,12 @@ Score content on a 0-10 scale based on importance, relevance, AND writeability f
 - Reader value: developers can learn something actionable or make an informed decision
 - Penalize heavily: link-only posts with no body, commit messages, version bump announcements, finance/stock news, pure press releases, industry gossip with no technical detail
 
-**9-10: Groundbreaking** - Major breakthroughs, paradigm shifts, or highly significant announcements
+**Twitter / X exception for AI model news:**
+- Substantive tweets or threads about AI model releases, leaks, benchmarks, pricing, or capability changes may score 6-7 even when shorter than a full article, IF they contain specific model names, versions, dates, or technical claims the author can expand into an interpretation post
+- High engagement (likes/replies) on AI model news from credible tech accounts is a positive signal
+- Still penalize: bare link tweets, pure RTs with no added context, and vague hype with no specifics
+
+**9-10: Groundbreaking**
 - New major version releases of widely-used technologies
 - Significant research breakthroughs
 - Important industry-changing announcements

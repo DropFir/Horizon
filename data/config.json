@@ -175,6 +175,7 @@
     "time_window_hours": 24,
     "blog_focus": [
       "AI/ML 与大模型应用",
+      "AI 模型发布、泄露与行业快讯",
       "Java 与后端开发",
       "前端与 Web 开发",
       "云原生、DevOps 与 Kubernetes",
