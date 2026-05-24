@@ -103,6 +103,30 @@
           "time_filter": "day",
           "fetch_limit": 12,
           "min_score": 40
+        },
+        {
+          "subreddit": "java",
+          "enabled": true,
+          "sort": "top",
+          "time_filter": "day",
+          "fetch_limit": 12,
+          "min_score": 40
+        },
+        {
+          "subreddit": "webdev",
+          "enabled": true,
+          "sort": "top",
+          "time_filter": "day",
+          "fetch_limit": 12,
+          "min_score": 50
+        },
+        {
+          "subreddit": "kubernetes",
+          "enabled": true,
+          "sort": "top",
+          "time_filter": "day",
+          "fetch_limit": 10,
+          "min_score": 35
         }
       ],
       "users": []
@@ -115,8 +139,8 @@
       "enabled": true,
       "apify_token_env": "APIFY_TOKEN",
       "actor_id": "altimis~scweet",
-      "users": ["pankajkumar_dev"],
-      "fetch_limit": 20,
+      "users": ["pankajkumar_dev", "swyx", "nipafx", "antfu7", "leerob"],
+      "fetch_limit": 50,
       "time_window_hours": 48,
       "fetch_reply_text": false,
       "max_replies_per_tweet": 3,
