@@ -152,6 +152,7 @@ class TwitterConfig(BaseModel):
     actor_id: str = "altimis~scweet"
     users: List[str] = Field(default_factory=list)
     fetch_limit: int = 10
+    time_window_hours: int = 48
     fetch_reply_text: bool = False
     max_replies_per_tweet: int = 3
     max_tweets_to_expand: int = 10

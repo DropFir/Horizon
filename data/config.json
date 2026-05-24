@@ -112,11 +112,12 @@
       "channels": []
     },
     "twitter": {
-      "enabled": false,
+      "enabled": true,
       "apify_token_env": "APIFY_TOKEN",
       "actor_id": "altimis~scweet",
-      "users": [],
+      "users": ["pankajkumar_dev"],
       "fetch_limit": 10,
+      "time_window_hours": 48,
       "fetch_reply_text": false,
       "max_replies_per_tweet": 3,
       "max_tweets_to_expand": 5,

@@ -266,6 +266,7 @@ Requires an [Apify](https://apify.com) account. Set `APIFY_TOKEN` in your `.env`
 ```
 
 - `users` — Twitter screen names to monitor, without the `@` prefix
+- `time_window_hours` — how far back to fetch tweets (default: `48`; other sources use `filtering.time_window_hours`)
 - `fetch_limit` — maximum tweets to fetch per run (across all users combined; minimum 100 due to actor constraint)
 - `fetch_reply_text` — when `true`, fetch actual reply bodies for important tweets and append them under `--- Top Comments ---` so the AI can factor in community discussion. Disabled by default.
 - `max_replies_per_tweet` — maximum reply lines to append per tweet (default: 3)

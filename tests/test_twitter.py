@@ -21,6 +21,9 @@ def _make_config(**kwargs) -> TwitterConfig:
     return TwitterConfig(**defaults)
 
 
+def test_twitter_config_default_time_window_hours() -> None:
+    assert TwitterConfig().time_window_hours == 48
+
 def _tweet(
     tweet_id: str = "123456",
     screen_name: str = "karpathy",

@@ -69,9 +69,17 @@ class HorizonOrchestrator:
             # 1. Determine time window
             since = self._determine_time_window(force_hours)
             self.console.print(f"📅 Fetching content since: {since.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            twitter_cfg = self.config.sources.twitter
+            if twitter_cfg and twitter_cfg.enabled and force_hours is None:
+                twitter_since = self._determine_twitter_since(force_hours)
+                if twitter_since != since:
+                    self.console.print(
+                        f"🐦 Twitter window: {twitter_cfg.time_window_hours}h "
+                        f"(since {twitter_since.strftime('%Y-%m-%d %H:%M:%S')})\n"
+                    )
 
             # 2. Fetch content from all sources
-            all_items = await self.fetch_all_sources(since)
+            all_items = await self.fetch_all_sources(since, force_hours=force_hours)
             self.console.print(f"📥 Fetched {len(all_items)} items from all sources\n")
 
             if not all_items:
@@ -216,13 +224,23 @@ class HorizonOrchestrator:
 
     def _determine_time_window(self, force_hours: int = None) -> datetime:
         if force_hours:
-            since = datetime.now(timezone.utc) - timedelta(hours=force_hours)
+            hours = force_hours
         else:
             hours = self.config.filtering.time_window_hours
-            since = datetime.now(timezone.utc) - timedelta(hours=hours)
-        return since
+        return datetime.now(timezone.utc) - timedelta(hours=hours)
 
-    async def fetch_all_sources(self, since: datetime) -> List[ContentItem]:
+    def _determine_twitter_since(self, force_hours: int = None) -> datetime:
+        if force_hours:
+            hours = force_hours
+        elif self.config.sources.twitter:
+            hours = self.config.sources.twitter.time_window_hours
+        else:
+            hours = self.config.filtering.time_window_hours
+        return datetime.now(timezone.utc) - timedelta(hours=hours)
+
+    async def fetch_all_sources(
+        self, since: datetime, force_hours: int = None
+    ) -> List[ContentItem]:
         """Fetch content from all configured sources.
 
         This is a stable stage entry point for integrations such as MCP.
@@ -264,7 +282,8 @@ class HorizonOrchestrator:
             # Twitter
             if self.config.sources.twitter and self.config.sources.twitter.enabled:
                 twitter_scraper = TwitterScraper(self.config.sources.twitter, client)
-                tasks.append(self._fetch_with_progress("Twitter", twitter_scraper, since))
+                twitter_since = self._determine_twitter_since(force_hours)
+                tasks.append(self._fetch_with_progress("Twitter", twitter_scraper, twitter_since))
 
             # OpenBB (financial news / filings via the OpenBB Platform SDK)
             if self.config.sources.openbb and self.config.sources.openbb.enabled:

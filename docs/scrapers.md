@@ -204,6 +204,7 @@ Flow:
 ```
 
 - `users` — Twitter screen names to monitor, without the `@` prefix
+- `time_window_hours` — how far back to fetch tweets (default: `48`; other sources use `filtering.time_window_hours`)
 - `fetch_limit` — maximum tweets to fetch per run
 - `fetch_reply_text` — when `true`, a second Apify run fetches reply bodies for each important tweet and appends them under `--- Top Comments ---` for AI analysis
 - `max_replies_per_tweet` — maximum reply lines per tweet (sorted by engagement score)

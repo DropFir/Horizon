@@ -235,7 +235,7 @@ class HorizonPipelineService:
         run_id = self.run_store.create_run(run_id)
         since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
-        raw_items = await orchestrator.fetch_all_sources(since)
+        raw_items = await orchestrator.fetch_all_sources(since, force_hours=hours)
         merged_items = orchestrator.merge_cross_source_duplicates(raw_items)
 
         self.run_store.save_items(run_id, "raw", items_to_dicts(merged_items))
