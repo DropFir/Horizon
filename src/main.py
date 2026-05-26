@@ -6,13 +6,14 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from rich.console import Console
 
+from .console_utils import configure_stdio_encoding, create_console, safe_print
 from .storage.manager import ConfigError, StorageManager
 from .orchestrator import HorizonOrchestrator
 
 
-console = Console()
+configure_stdio_encoding()
+console = create_console()
 
 
 def print_banner():
@@ -53,7 +54,7 @@ def main():
         try:
             config = storage.load_config()
         except FileNotFoundError:
-            console.print("[bold red]❌ Configuration file not found![/bold red]\n")
+            console.print("[bold red][ERROR] Configuration file not found![/bold red]\n")
             console.print(
                 "Run [bold cyan]uv run horizon-wizard[/bold cyan] to launch the interactive setup wizard,\n"
                 "or create [cyan]data/config.json[/cyan] manually based on the template:\n"
@@ -61,10 +62,10 @@ def main():
             print_config_template()
             sys.exit(1)
         except ConfigError as e:
-            console.print(f"[bold red]❌ Error loading configuration: {e}[/bold red]")
+            console.print(f"[bold red][ERROR] Error loading configuration: {e}[/bold red]")
             sys.exit(1)
         except Exception as e:
-            console.print(f"[bold red]❌ Error loading configuration: {e}[/bold red]")
+            console.print(f"[bold red][ERROR] Error loading configuration: {e}[/bold red]")
             sys.exit(1)
 
         # Create and run orchestrator
@@ -75,7 +76,10 @@ def main():
         console.print("\n[yellow]⚠️  Interrupted by user[/yellow]")
         sys.exit(0)
     except Exception as e:
-        console.print(f"\n[bold red]❌ Fatal error: {e}[/bold red]")
+        try:
+            console.print(f"\n[bold red][ERROR] Fatal error: {e}[/bold red]")
+        except UnicodeEncodeError:
+            safe_print(f"[ERROR] Fatal error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

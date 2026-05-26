@@ -274,9 +274,9 @@ class WebhookNotifier:
         self.config = config
         if console is None:
             try:
-                from rich.console import Console
+                from ..console_utils import create_console
 
-                self.console = Console()
+                self.console = create_console()
             except ImportError:
 
                 class DummyConsole:

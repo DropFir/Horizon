@@ -6,8 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 from urllib.parse import urlparse
 import httpx
-from rich.console import Console
-
+from .console_utils import create_console
 from .models import Config, ContentItem
 from .storage.manager import StorageManager
 from .services.email import EmailManager
@@ -39,7 +38,7 @@ class HorizonOrchestrator:
         """
         self.config = config
         self.storage = storage
-        self.console = Console()
+        self.console = create_console()
         self.email_manager = EmailManager(config.email, console=self.console) if config.email else None
         self.webhook_notifier = (
             WebhookNotifier(config.webhook, console=self.console)
@@ -53,7 +52,7 @@ class HorizonOrchestrator:
         Args:
             force_hours: Optional override for time window in hours
         """
-        self.console.print("[bold cyan]🌅 Horizon - Starting aggregation...[/bold cyan]\n")
+        self.console.print("[bold cyan][Horizon] Starting aggregation...[/bold cyan]\n")
 
         # Check email subscriptions if configured
         if (
@@ -211,7 +210,12 @@ class HorizonOrchestrator:
                     )
 
         except Exception as e:
-            self.console.print(f"[bold red]❌ Error: {e}[/bold red]")
+            try:
+                self.console.print(f"[bold red][ERROR] {e}[/bold red]")
+            except UnicodeEncodeError:
+                from .console_utils import safe_print
+
+                safe_print(f"[ERROR] {e}")
 
             # Send webhook failure notification if configured
             if self.webhook_notifier:
