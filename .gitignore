@@ -36,6 +36,9 @@ ENV/
 # Environment variables
 .env
 
+# Local runtime config (use config.example.json as template)
+data/config.json
+
 # Data files (keep structure, ignore content)
 data/seen.json
 data/summaries/*.md
